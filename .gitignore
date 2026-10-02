@@ -1,0 +1,16 @@
+node_modules/
+.DS_Store
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+**/outputs/
+**/dist/
+*.zip
+*.mp3
+*.wav
+*.aiff
+*.flac
+*.f32
+*.rgb

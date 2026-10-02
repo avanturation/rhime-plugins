@@ -1,0 +1,10 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const root = __dirname;
+const read = (name) => fs.readFileSync(path.join(root, 'src', name), 'utf8');
+const core = read('core.js');
+fs.writeFileSync(path.join(root, 'code.js'), core + '\n' + read('main.js'));
+const font = fs.readFileSync(path.join(root, 'assets', 'fonts', 'InterludeVariable-1.3.woff2')).toString('base64');
+const html = read('ui.html').replace('/* FONT */', () => font).replace('/* CORE */', () => core).replace('/* AUDIO */', () => read('audio.js')).replace('/* UI */', () => read('ui.js'));
+fs.writeFileSync(path.join(root, 'ui.html'), html);
+console.log('Built code.js and ui.html. No dependencies or network required.');

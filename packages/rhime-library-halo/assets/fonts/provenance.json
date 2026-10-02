@@ -1,0 +1,10 @@
+{
+  "family": "Interlude Variable",
+  "release": "1.3",
+  "repository": "https://github.com/avanturation/interlude",
+  "sourceCommit": "87d9f19f78cb34d695b13dfa7de2da0628b5b713",
+  "source": "Interlude 1.3 repository release archive, native Glyphs export",
+  "sha256": "e66082e746222189aa84df86f2338c4108fc704b024b202797d9847dbf24f085",
+  "license": "OFL-1.1",
+  "modification": "none; original full variable WOFF2 embedded in built UI"
+}

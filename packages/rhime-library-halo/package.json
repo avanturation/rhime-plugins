@@ -1,0 +1,21 @@
+{
+  "name": "rhime-library-halo",
+  "version": "1.2.0",
+  "private": true,
+  "description": "Multiple album covers to a Rhime search-bar Halo background",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/avanturation/rhime-plugins.git",
+    "directory": "packages/rhime-library-halo"
+  },
+  "bugs": {
+    "url": "https://github.com/avanturation/rhime-plugins/issues"
+  }
+}
