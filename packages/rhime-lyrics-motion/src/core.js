@@ -46,7 +46,7 @@ var LyricsMotion=(function(){
       weight:Math.round(clamp(num(v.weight,600),100,900)),margin:clamp(num(v.margin,24),8,Math.min(120,width/3)),
       gap:clamp(num(v.gap,28),0,100),focus:clamp(num(v.focus,42),15,80),
       inactive:clamp(num(v.inactive,.32),0,1),blur:clamp(num(v.blur,3),0,20),
-      transition:clamp(num(v.transition,.46),.02,2),tail:clamp(num(v.tail,3),.1,30),mediaDuration:clamp(num(v.mediaDuration,0),0,7200),
+      transition:clamp(num(v.transition,.46),.02,2),tail:clamp(num(v.tail,8),.1,30),
       syncOffset:clamp(num(v.syncOffset,0),-60000,60000),fromFirst:v.fromFirst===true,
       bezier:Object.fromEntries(Object.entries(defaultBezier).map(([k,d])=>[k,clamp(num(v.bezier?.[k],d),0,1)])),
       color:/^#[\da-f]{6}$/i.test(v.color||'')?v.color.toUpperCase():'#F8F4F3'};
@@ -59,8 +59,7 @@ var LyricsMotion=(function(){
       else cues.push({sourceStart:start,text:c.text});
     }
     const origin=s.fromFirst?cues[0].sourceStart:0,end=cues.at(-1).sourceStart+s.tail;
-    if(s.mediaDuration>end&&cues.at(-1).text)cues.push({sourceStart:time(end),text:''});
-    return {cues:cues.map(c=>({...c,start:time(c.sourceStart-origin)})),origin,duration:time(Math.max(end,s.mediaDuration)-origin)};
+    return {cues:cues.map(c=>({...c,start:time(c.sourceStart-origin)})),origin,duration:time(end-origin)};
   }
   const hold={type:'HOLD'};
   const key=(t,v,e=hold)=>({timelinePosition:time(t),value:{type:'FLOAT',value:v},easing:e.easingFunctionCubicBezier?{...e,easingFunctionCubicBezier:{...e.easingFunctionCubicBezier}}:{...e}});

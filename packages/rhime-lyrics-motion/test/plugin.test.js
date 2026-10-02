@@ -22,7 +22,7 @@ test('existing design matches repeated lyrics once in visual order and preserves
 });
 test('applying creates no nodes and leaves background, controls, text and typography unchanged',()=>{
  const f=fixture(),d=D.inspect(f.root,parsed,{}),before=JSON.stringify(f.controls,(k,v)=>k==='parent'||k==='timelines'?undefined:v),count=f.nodes.length,positions=f.texts.map(n=>[n.x,n.y,n.width,n.height,n.characters,JSON.stringify(n.fontName)]);
- D.apply(d);assert.equal(f.nodes.length,count);assert.equal(JSON.stringify(f.controls,(k,v)=>k==='parent'||k==='timelines'?undefined:v),before);assert.equal(f.root.duration,46.4);
+ D.apply(d);assert.equal(f.nodes.length,count);assert.equal(JSON.stringify(f.controls,(k,v)=>k==='parent'||k==='timelines'?undefined:v),before);assert.equal(f.root.duration,51.4);
  assert.deepEqual(f.texts.map(n=>[n.x,n.y,n.width,n.height,n.characters,JSON.stringify(n.fontName)]),positions);assert.equal(f.strip.manualKeyframeTracks.TRANSLATION_Y.keyframes.at(-1).value.value,-825);
  assert.equal(f.texts[1].fills[0].opacity,1);assert.equal(f.texts[1].manualKeyframeTracks.OPACITY.keyframes.find(k=>k.timelinePosition===19.16).value.value,1);assert.equal(f.strip.clipsContent,false);assert.equal(f.viewport.clipsContent,true);
 });
@@ -48,13 +48,13 @@ test('main plugin revalidates design geometry before applying and reports target
  D.apply(D.inspect(f.root,parsed,{}));assert.equal(f.strip.effects.length,0);assert.equal(f.viewport.effects.length,1);assert.equal(f.viewport.effects[0].radius,12);assert.equal(f.viewport.effects[0].startOffset.x,.5);assert.equal(f.viewport.effects[0].startOffset.y,(16+.4*328)/348);
  D.apply(D.inspect(f.root,parsed,{}));assert.equal(f.viewport.effects.length,1);await D.restore(f.root,async id=>f.map.get(id));assert.deepEqual(JSON.parse(JSON.stringify(f.strip.effects)),[blur]);assert.equal(f.viewport.effects.length,0);
  });
- test('switching a previously applied timeline to first-line timing trims only the generated duration',()=>{const f=fixture();D.apply(D.inspect(f.root,parsed,{}));assert.equal(f.root.duration,46.4);D.apply(D.inspect(f.root,parsed,{fromFirst:true}));assert.equal(f.root.duration,30.03);});
+ test('switching a previously applied timeline to first-line timing trims only the generated duration',()=>{const f=fixture();D.apply(D.inspect(f.root,parsed,{}));assert.equal(f.root.duration,51.4);D.apply(D.inspect(f.root,parsed,{fromFirst:true}));assert.equal(f.root.duration,35.03);});
 test('in-place adapter passes custom Bézier points to Figma tracks without changing timing or layout',()=>{
  const f=fixture(),b={x1:.22,y1:1,x2:.36,y2:1};D.apply(D.inspect(f.root,parsed,{bezier:b}));
  for(const tr of [f.strip.manualKeyframeTracks.TRANSLATION_Y,f.texts[2].manualKeyframeTracks.OPACITY,f.texts[2].manualKeyframeTracks.effects[0].RADIUS]){
   const k=tr.keyframes.find(k=>k.easing.type==='CUSTOM_CUBIC_BEZIER');assert.deepEqual(k.easing.easingFunctionCubicBezier,b);
  }
- assert.equal(f.root.duration,46.4);assert.equal(f.texts[2].fontSize,28);assert.equal(f.texts[2].characters,parsed.cues[2].text);
+ assert.equal(f.root.duration,51.4);assert.equal(f.texts[2].fontSize,28);assert.equal(f.texts[2].characters,parsed.cues[2].text);
 });
 test('native incoming easing matches the preview outgoing easing on every interval',()=>{
  const f=fixture(),d=D.inspect(f.root,parsed,{bezier:{x1:.22,y1:1,x2:.36,y2:1}});D.apply(d);
@@ -90,4 +90,15 @@ test('background tracks and original fills restore with lyrics, without new node
  D.apply(D.inspect(f.root,parsed,{}),{node:f.root,fills:[{type:'SHADER',id:'mesh',properties:{point1:track.baseValue.value}}],tracks:[{field,track}]});
  assert.equal(f.nodes.length,count);assert.equal(f.root.fills[0].type,'SHADER');assert.ok(f.root.manualKeyframeTracks.fills[0].properties.point1);
  await D.restore(f.root,async id=>f.map.get(id));assert.equal(f.root.fills[0].imageHash,'original');assert.equal(f.root.manualKeyframeTracks.fills[0].properties.point1,undefined);
+});
+
+test('applying caps a pre-existing long export timeline, reapplying trims it again, and restore retains its original length',async()=>{
+ const f=fixture();f.root.applyManualKeyframeTrack({type:'PROPERTY',name:'OPACITY'},{baseValue:{type:'FLOAT',value:1},keyframes:[]});f.root.duration=178.21;
+ D.apply(D.inspect(f.root,parsed,{}));assert.equal(f.root.duration,51.4);
+ const shorter=L.parse(sample.split('\n').slice(0,3).join('\n'));
+ D.apply(D.inspect(f.root,shorter,{}));assert.equal(f.root.duration,27.9);
+ for(const n of [f.strip,...f.texts])for(const tr of [n.manualKeyframeTracks.TRANSLATION_Y,n.manualKeyframeTracks.OPACITY,...Object.values(n.manualKeyframeTracks.effects||{}).flatMap(e=>Object.values(e))].filter(Boolean)){
+  assert.ok(tr.keyframes.every(k=>k.timelinePosition<=27.9));
+ }
+ await D.restore(f.root,async id=>f.map.get(id));assert.equal(f.root.duration,178.21);
 });

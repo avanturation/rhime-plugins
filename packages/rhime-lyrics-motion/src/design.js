@@ -95,8 +95,8 @@ var LyricsDesign=(function(){
         for(const t of background.tracks)background.node.applyManualKeyframeTrack(t.field,t.track);
       }
       const timeline=root.timelines&&root.timelines[0];if(!timeline)throw new Error('Motion 타임라인이 생성되지 않았습니다.');
-      const original=oldRootData?JSON.parse(oldRootData).timeline:oldTimeline;
-      root.setTimelineDuration(timeline.id,Math.max(plan.duration,original?original.duration:0));
+      // Export stops at the LRC cutoff; the original duration is kept only for restore.
+      root.setTimelineDuration(timeline.id,plan.duration);
       return backup;
     }catch(e){
       if(changed){for(const p of previous)try{restoreNode(p.n,p.state);}catch(_){}if(oldTimeline)try{root.setTimelineDuration(oldTimeline.id,oldTimeline.duration);}catch(_){} }

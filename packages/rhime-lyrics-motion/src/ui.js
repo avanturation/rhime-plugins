@@ -39,12 +39,12 @@
       p.style.position='relative';strip.appendChild(p);nodes.push(p);
     }
     const heights=nativeHeights&&nativeHeights.length===nodes.length?nativeHeights:nodes.map(n=>n.offsetHeight||settings.lineHeight);
-    const clockSettings={...settings,mediaDuration:$('meshMotion').checked&&audioAnalysis?audioAnalysis.duration:0};
-    plan=target?L.compileDesign(parsed,clockSettings,target.preview,manualTimes):L.compile(parsed,clockSettings,heights);
+    plan=target?L.compileDesign(parsed,settings,target.preview,manualTimes):L.compile(parsed,settings,heights);
     nodes.forEach((n,i)=>{n.style.position='absolute';n.style.top=plan.rows[i].y+'px';});strip.style.height=plan.contentHeight+'px';
     $('sizeInfo').textContent=target?settings.width+' × '+settings.height:'—';$('scrub').max=plan.duration;
     $('lrcInfo').textContent=`${plan.rows.length}줄 · ${L.clock(parsed.cues[0].start)} → ${L.clock(parsed.cues.at(-1).start)}`+(parsed.warnings.length?` · 알림 ${parsed.warnings.length}개: ${parsed.warnings[0]}`:'');
     $('timingInfo').textContent=settings.fromFirst?`원곡 ${L.clock(plan.origin)} → Motion 00:00.00 · 총 ${plan.duration.toFixed(2)}초`:`원곡 시간을 유지합니다. 첫 가사 ${L.clock(plan.cues[0].start)} · 총 ${plan.duration.toFixed(2)}초`;
+    $('timingInfo').textContent+=` · 마지막 지정 시간 + ${settings.tail}초에서 종료`;
     $('status').textContent=`${plan.rows.length}줄 · 미지정 ${plan.untimed||0}줄 · ${settings.fromFirst?'첫 가사 기준':'원곡 시간 기준'}`;$('status').classList.remove('error');
     if(resetTime)current=Math.min(plan.duration,plan.cues.find(c=>c.text).start+settings.transition);else current=Math.min(current,plan.duration);
     $('create').disabled=busy||dirty||!target||analyzing||($('meshMotion').checked&&(!meshSource||!audioAnalysis));$('savePlan').disabled=dirty;$('saveLrc').disabled=!target||dirty;resize();paint();
@@ -138,7 +138,7 @@
   $('create').onclick=()=>{if(busy||dirty||!target||analyzing||($('meshMotion').checked&&(!meshSource||!audioAnalysis)))return;pause();busy=true;$('create').disabled=true;post({type:'apply-existing',nodeId:target.id,signature:target.signature,lrc:$('lrc').value,manualTimes,settings:plan.settings,mesh:$('meshMotion').checked?{nodeId:meshSource.nodeId,signature:meshSource.signature,settings:meshSettings,analysis:audioAnalysis}:null});};
   $('restoreDesign').onclick=()=>{if(target&&!busy){pause();busy=true;$('create').disabled=$('restoreDesign').disabled=true;post({type:'restore-existing',nodeId:target.id});}};
   const download=(blob,name)=>{const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-  $('savePlan').onclick=()=>download(new Blob([JSON.stringify({format:'rhime-lyrics-motion',version:'0.3.0',...plan,manualTimes,mesh:meshSettings?{settings:meshSettings,analysis:audioAnalysis}:null},null,2)],{type:'application/json'}),'rhime-lyrics-motion.json');
+  $('savePlan').onclick=()=>download(new Blob([JSON.stringify({format:'rhime-lyrics-motion',version:'0.3.1',...plan,manualTimes,mesh:meshSettings?{settings:meshSettings,analysis:audioAnalysis}:null},null,2)],{type:'application/json'}),'rhime-lyrics-motion.json');
   $('saveLrc').onclick=()=>{const resolved=L.resolveRows(parsed,target.preview.rows,manualTimes);download(new Blob([resolved.parsed.cues.map(c=>'['+L.clock(c.start)+']'+c.text).join('\n')+'\n'],{type:'text/plain;charset=utf-8'}),'rhime-lyrics.lrc');if(plan.untimed)notify(`시간 미지정 ${plan.untimed}줄은 LRC에서 제외하고 디자인에 유지했습니다.`);};
   $('connectMesh').onclick=()=>post({type:'inspect-mesh',nodeId:$('meshSources').value||undefined});
   $('loadMeshSettings').onclick=()=>$('meshSettingsFile').click();$('meshSettingsFile').onchange=safe(async e=>{const file=e.target.files[0];e.target.value='';if(!file)return;if(file.size>1024*1024)throw new Error('1MB 이하의 Mesh 설정 JSON을 선택해 주세요.');meshSettings=LyricsMesh.config(JSON.parse(await file.text()));meshSettingsImported=true;$('meshInfo').textContent='Mesh 설정을 불러왔습니다. Figma 출력에는 Shader 연결이 필요합니다.';$('meshMotion').checked=true;rebuild();await analyzeMusic();});

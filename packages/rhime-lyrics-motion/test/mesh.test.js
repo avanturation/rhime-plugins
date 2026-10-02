@@ -22,3 +22,14 @@ test('native mesh keys change colours while every point stays fixed and share au
 test('static PNGs and invalid settings fail before applying a gradient',()=>{
  assert.throws(()=>R.source({fills:[{type:'IMAGE'}]}),/PNG/);assert.throws(()=>R.config({palette:[]}),/JSON/);assert.throws(()=>R.tracks(source(),settings,null,0,3),/분석/);
 });
+
+test('mesh colour keys stop at the lyric cutoff instead of the longer music duration',()=>{
+ const L=require('../src/core'),info=source(),duration=178.21,frames=Array.from({length:Math.ceil(duration*30)+1},(_,i)=>({at:Math.min(duration,i/30),time:i/30,bass:.5,vocal:.2,hit:.3,instruments:.4,phases:[i/90,i/120,i/100,i/150]}));
+ const analysis={duration,rate:30,frames};
+ for(const fromFirst of [false,true]){
+  const plan=L.compile(L.parse('[00:16.37]first\n[00:43.40]last'),{mediaDuration:duration,fromFirst});
+  const tracks=R.tracks(info,settings,analysis,plan.origin,plan.duration);
+  assert.equal(plan.duration,fromFirst?35.03:51.4);
+  for(const {track} of tracks){assert.equal(track.keyframes.at(-1).timelinePosition,plan.duration);assert.ok(track.keyframes.every(k=>k.timelinePosition<=plan.duration));}
+ }
+});
